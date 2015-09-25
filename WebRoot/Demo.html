@@ -1,0 +1,160 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>地图展示</title>
+	
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    
+    <style type="text/css">
+	body, html,#allmap {width: 100%;height: 100%;overflow: hidden;margin:0,0,0,0;font-family:"微软雅黑";}
+	</style>	
+	<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=mNUVfdsHiXYX754Y2xr3xllO"></script>
+  </head>
+  
+  <body>
+   
+    <div id="allmap"></div>
+    
+  </body>
+ 
+  <script type="text/javascript">
+  
+   //创建地图实例
+   var map=new BMap.Map("allmap");
+   //设置中心点坐标
+   //var point=new BMap.Point(116.404, 39.915);
+   //初始化地图，设置中心点坐标和地图级别
+    map.centerAndZoom("西安");
+    
+    var anc = {anchor:BMAP_ANCHOR_TOP_LEFT};
+    var omc = new BMap.OverviewMapControl(anc);
+	map.addControl(omc);
+	
+	//比例尺控件
+	var opts = {anchor:BMAP_ANCHOR_BOTTOM_RIGHT};
+	var sc = new BMap.ScaleControl(opts);
+	map.addControl(sc);
+	
+   // 覆盖区域图层测试
+	map.addTileLayer(new BMap.PanoramaCoverageLayer());
+   //构造全景控件
+	var stCtrl = new BMap.PanoramaControl(); 
+	stCtrl.setOffset(new BMap.Size(20, 50));
+	map.addControl(stCtrl);//添加全景控件
+  
+   //添加地图类型控件
+   map.addControl(new BMap.MapTypeControl());
+   var navCtl= new BMap.NavigationControl();
+   map.addControl(navCtl);
+	
+   //设置地图显示的城市
+   map.setCurrentCity("西安"); 
+   //开启鼠标滚轮缩放 
+   map.enableScrollWheelZoom(true);  
+
+  function addressAly(){
+       var addr= document.getElementById("addr").value;
+       // 创建地址解析器实例
+	    var myGeo = new BMap.Geocoder();
+	    // 将地址解析结果显示在地图上,并调整地图视野
+	    myGeo.getPoint(addr, function(point){
+		if (point) {
+			map.centerAndZoom(point, 16);
+			map.addOverlay(new BMap.Marker(point));
+		}else{
+			alert("您选择地址没有解析到结果!");
+		}
+	}, "西安市");
+	    
+  }
+     var local = new BMap.LocalSearch(map, {
+		renderOptions:{map: map}
+	});
+  function search(){
+      var searchaddr = document.getElementById("site").value;     
+	  local.search(searchaddr);
+  }
+  
+  
+  //定义一个div块，将输入框和确认按钮作为该div的子元素
+  function RecordControl(){
+    this.defaultAnchor = BMAP_ANCHOR_BOTTOM_LEFT;
+    this.defaultOffset = new BMap.Size(20,38);
+  }
+  RecordControl.prototype = new BMap.Control();//继承control基类
+  RecordControl.prototype.initialize = function(map){
+     //创建一个div元素
+     var div = document.createElement("div");
+     div.style.border = "1px solid gray";   
+     div.style.backgroundColor = "parent";  
+     div.style.width = "96%";
+     div.style.height = "35px";
+     //创建一个input元素
+     var input = document.createElement("input");
+     input.style.border = "1px solid gray";   
+     //input.style.backgroundColor = "parent";  
+     input.style.width = "90%";
+     input.style.height = "100%";
+     input.name="comment";
+     div.appendChild(input);
+     //创建一个确定按钮
+     var button = document.createElement("button");
+     button.style.width = "8%";
+     button.style.height = "35px";
+     button.style.cssFloat = "right";
+     var text = document.createTextNode("确定");
+     text.fontSize = "large";
+     button.appendChild(text);  
+     button.onclick = function(e){      
+        arr[arr.length]=input.value;
+     };      
+     div.appendChild(button);
+     
+     // 添加 DOM 元素到地图中    
+     map.getContainer().appendChild(div);  
+     return div;
+  } 
+  
+	  
+  //当用户点击地图上某地点时，在此地点添加标签，并显示该地的一些已有信息
+  var arr=["这里风景真好","这里人真好","回家吧"];
+  var i =0;
+  var latValue,lngValue;
+  function theLocation(e){
+      latValue = e.point.lat;
+      lngValue = e.point.lng;
+      var new_point = new BMap.Point(lngValue,latValue);
+	  var marker = new BMap.Marker(new_point);  // 创建标注
+	  map.addOverlay(marker);              // 将标注添加到地图中
+	  //map.panTo(new_point); 
+	  var lopts = {
+	  position : new_point,    // 指定文本标注所在的地理位置
+	  offset   : new BMap.Size(10, 10)    //设置文本偏移量
+	  }
+      var label = new BMap.Label(arr[i], lopts);  // 创建文本标注对象
+		label.setStyle({
+			 color : "black",
+			 fontSize : "15px",
+			 height : "20px",
+			 lineHeight : "20px",
+			 fontFamily:"微软雅黑",
+			 borderColor:"black",
+			 backgroundColor:"parent"
+			// borderStyle:none
+			 
+		 });	   	   
+	  setInterval(function(){
+	     if(i<arr.length-1)i++;
+	     else i=0;
+	     label.setContent(arr[i]);
+	     map.addOverlay(label);
+	  },3000);
+	  
+	  //添加输入控件
+     var div = new RecordControl();
+     map.addControl(div);
+  }
+  map.addEventListener("click", theLocation);
+  </script>
+ </html>
